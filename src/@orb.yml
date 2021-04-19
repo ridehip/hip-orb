@@ -1,0 +1,11 @@
+version: 2.1
+
+description: >
+  Ridehip internal tools for deployment
+
+display:
+  home_url: "https://www.ridehip.com"
+  source_url: "https://github.com/ridehip/hip-orb"
+
+orbs:
+ slack: circleci/slack@4.1.3
