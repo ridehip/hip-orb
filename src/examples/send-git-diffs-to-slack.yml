@@ -10,7 +10,7 @@ usage:
         docker:
           - image: circleci/openjdk:8-jdk
         steps:
-          - ridehip-orb/send-git-diffs-to-slack:
+          - hip-orb/send-git-diffs-to-slack:
               project: backend
               enviroment: staging
               email: support@ridehip.com
