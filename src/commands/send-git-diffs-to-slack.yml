@@ -1,0 +1,101 @@
+description: >
+  Sends all diffs happened between current deploy to the previous deploy to Slack channel.
+  Diffs include all pull requests and commits.
+  SLACK_ACCESS_TOKEN env must be set with the token to connect to slack
+  SLACK_DEFAULT_CHANNEL env must be set with default channel id in slack to send to - it can be overriden with slack_channel parameter
+
+parameters:
+    slack_channel:
+        default: $SLACK_DEFAULT_CHANNEL
+        description: slack channel to send to
+        type: string
+    email:
+        description: git user email to create tags with
+        type: string
+    project:
+        description: your git repository project name 
+        type: string
+    enviroment:
+        description: your env name
+        type: enum
+        enum: ["production", "staging"]
+
+  steps:
+    - checkout
+    - run:
+        name: Handle Deploy Git Tags   
+        command: |
+          git config --global user.email "<< parameters.email >>"
+          git config --global user.name "Circleci Build"
+          LATEST_BUILD_TAG=$(git for-each-ref refs/tags/<< parameters.project >>_version_* --sort=-taggerdate --format='%(refname:lstrip=2)' --count=1)
+          LATEST_DEPLOY_TAG=$(git for-each-ref refs/tags/<< parameters.enviroment >>_<< parameters.project >>_version_* --sort=-taggerdate --format='%(refname:lstrip=2)' --count=1)
+          NEW_DEPLOY_TAG=<< parameters.project >>_$LATEST_BUILD_TAG
+          echo $NEW_DEPLOY_TAG > build_tag.txt
+          cat build_tag.txt
+          if ! [[ `git tag -l $NEW_DEPLOY_TAG` ]]; then
+              LATEST_BUILD_COMMIT=$(git rev-list -n 1 $LATEST_BUILD_TAG)
+              git tag -a $NEW_DEPLOY_TAG $LATEST_BUILD_COMMIT -m "deploy to << parameters.enviroment >>"
+              git push origin $NEW_DEPLOY_TAG;
+          fi
+          DEPLOY_LOG=$(git log --pretty="%h %cn -> [%s]" $LATEST_DEPLOY_TAG...$NEW_DEPLOY_TAG)
+          if [[ ! -z "$DEPLOY_LOG" ]] && [[ $DEPLOY_LOG == *"Merge pull request"* ]]
+          then
+            PRS=$(echo "$DEPLOY_LOG" | grep 'Merge pull request')
+            COMMITS=$(echo "$DEPLOY_LOG" | grep -v 'Merge pull request')
+            NUM_OF_LINES=$(echo "$COMMITS" | wc -l)
+            HALF_THE_LINES=$(($NUM_OF_LINES / 2))
+            SECOND_HALF=$HALF_THE_LINES
+            [ ! $(($NUM_OF_LINES%2)) -eq 0 ] && SECOND_HALF=$(($SECOND_HALF+1)) # handles uneven number of commits
+            [ $(($HALF_THE_LINES)) -eq 0 ] && HALF_THE_LINES=1 # handles special cases of only one commit without PR (never happens)
+            COMMITS1=$(echo "$COMMITS" | head -n $HALF_THE_LINES)
+            COMMITS2=$(echo "$COMMITS" | tail -n $SECOND_HALF)
+            echo "$PRS" | sed 's/^/*/' | sed 's/$/*/'| sed -r 's/\"/\\\"/g' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' > deploy_log_prs.txt
+            echo "$COMMITS1" | sed -r 's/\"/\\\"/g' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' > deploy_log_commits1.txt
+            echo "$COMMITS2" | sed -r 's/\"/\\\"/g' | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' > deploy_log_commits2.txt
+          else
+              echo "No git log to send to slack" > deploy_log_prs.txt
+              echo "." > deploy_log_commits1.txt
+              echo "." > deploy_log_commits2.txt
+          fi
+          cat deploy_log_prs.txt
+          cat deploy_log_commits1.txt
+          cat deploy_log_commits2.txt
+
+    - slack/notify:
+        channel: << parameters.slack_channel >>
+        custom: |
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "New << parameters.project >> version deployed to << parameters.enviroment >> [$(cat build_tag.txt)]"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "$(cat deploy_log_prs.txt)"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "plain_text",
+                  "text": "$(cat deploy_log_commits1.txt)"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "plain_text",
+                  "text": "$(cat deploy_log_commits2.txt)"
+                }
+              },
+              {
+                "type": "divider"
+              }
+            ]
+          }
