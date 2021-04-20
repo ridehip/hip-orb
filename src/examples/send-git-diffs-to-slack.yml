@@ -6,12 +6,12 @@ usage:
   orbs:
     hip-orb: ridhip/hip-orb@1.2.3
   jobs:
-    - build:
-        docker:
-          - image: circleci/openjdk:8-jdk
-        steps:
-          - hip-orb/send-git-diffs-to-slack:
-              project: backend
-              enviroment: staging
-              email: support@ridehip.com
-              slack_channel: CGFKFHJD8
+    build:
+      docker:
+        - image: circleci/openjdk:8-jdk
+      steps:
+        - hip-orb/send-git-diffs-to-slack:
+            project: backend
+            enviroment: staging
+            email: support@ridehip.com
+            slack_channel: CGFKFHJD8
