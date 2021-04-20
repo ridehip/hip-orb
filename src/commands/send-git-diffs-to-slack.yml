@@ -13,17 +13,17 @@ parameters:
         description: git user email to create tags with
         type: string
     project:
-        description: your git repository project name 
+        description: your git repository project name
         type: string
     enviroment:
         description: your env name
         type: enum
         enum: ["production", "staging"]
 
-  steps:
+steps:
     - checkout
     - run:
-        name: Handle Deploy Git Tags   
+        name: Handle Deploy Git Tags
         command: |
           git config --global user.email "<< parameters.email >>"
           git config --global user.name "Circleci Build"
