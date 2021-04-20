@@ -29,7 +29,7 @@ steps:
           git config --global user.name "Circleci Build"
           LATEST_BUILD_TAG=$(git for-each-ref refs/tags/<< parameters.project >>_version_* --sort=-taggerdate --format='%(refname:lstrip=2)' --count=1)
           LATEST_DEPLOY_TAG=$(git for-each-ref refs/tags/<< parameters.enviroment >>_<< parameters.project >>_version_* --sort=-taggerdate --format='%(refname:lstrip=2)' --count=1)
-          NEW_DEPLOY_TAG=<< parameters.project >>_$LATEST_BUILD_TAG
+          NEW_DEPLOY_TAG=<< parameters.enviroment >>_$LATEST_BUILD_TAG
           echo $NEW_DEPLOY_TAG > build_tag.txt
           cat build_tag.txt
           if ! [[ `git tag -l $NEW_DEPLOY_TAG` ]]; then
