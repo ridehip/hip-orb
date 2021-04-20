@@ -1,0 +1,17 @@
+description: >
+  Checksout the code and sends diffs to slack
+
+usage:
+  version: 2.1
+  orbs:
+    hip-orb: ridhip/hip-orb@1.2.3
+  jobs:
+    - build:
+        docker:
+          - image: circleci/openjdk:8-jdk
+        steps:
+          - ridehip-orb/send-git-diffs-to-slack:
+              project: backend
+              enviroment: staging
+              email: support@ridehip.com
+              slack_channel: CGFKFHJD8
