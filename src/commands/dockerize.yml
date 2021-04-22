@@ -26,6 +26,6 @@ steps:
     - run:
           name: "Build & Push Corporates Docker Images"
           command: |
-            docker build -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:${CIRCLE_BUILD_NUM} -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:latest .
+            docker build -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:${CIRCLE_BUILD_NUM} -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:latest --build-arg GITHUB_PACKAGES_AUTH_TOKEN=$GITHUB_PACKAGES_AUTH_TOKEN .
             docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:${CIRCLE_BUILD_NUM}
             docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:latest
