@@ -1,0 +1,31 @@
+description: >
+  Building a docker image out of the project and uploads it to AWS
+  $AWS_ACCOUNT_ID and CIRCLE_BUILD_NUM must be set
+
+parameters:
+    project:
+        description: your git repository project name
+        type: string
+
+steps:
+    - checkout
+    - setup_remote_docker:
+          docker_layer_caching: true
+
+    - run:
+          name: Install aws cli
+          command: |
+            curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+            unzip awscli-bundle.zip
+            sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+
+    - run:
+          name: "Log in to AWS ECR && docker login"
+          command: eval $(aws ecr get-login --no-include-email --region us-east-2)
+
+    - run:
+          name: "Build & Push Corporates Docker Images"
+          command: |
+            docker build -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:${CIRCLE_BUILD_NUM} -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:latest .
+            docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:${CIRCLE_BUILD_NUM}
+            docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:latest
