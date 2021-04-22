@@ -13,7 +13,7 @@ parameters:
         description: git user email to create tags with
         type: string
     project:
-        description: your git repository project name
+        description: your project name (doesnt have to be same as git repository - only letters)
         type: string
     enviroment:
         description: your env name
