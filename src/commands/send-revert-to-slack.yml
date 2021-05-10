@@ -1,0 +1,43 @@
+description: >
+  Sends a custom message to slack.
+  SLACK_ACCESS_TOKEN env must be set with the token to connect to slack
+  SLACK_DEFAULT_CHANNEL env must be set with default channel id in slack to send to - it can be overriden with slack_channel parameter
+
+parameters:
+    slack_channel:
+        default: $SLACK_DEFAULT_CHANNEL
+        description: slack channel to send to
+        type: string
+    project:
+        description: your project name (doesnt have to be same as git repository - only letters)
+        type: string
+    enviroment:
+        description: your env name
+        type: enum
+        enum: ["production", "staging"]
+
+steps:
+    - checkout
+    - run:
+        name: Build revert message
+        command: |
+          REVERT_TAG=$(git for-each-ref refs/tags/<< parameters.enviroment >>_<< parameters.project >>_version_* --sort=-taggerdate --format='%(refname:lstrip=2)' --count=2 | sed -n 2p)
+          echo "$REVERT_TAG" > revert_tag.txt
+          cat revert_tag.txt
+    - slack/notify:
+        channel: << parameters.slack_channel >>
+        custom: |
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "<< parameters.project >> << parameters.enviroment >> reverted back to $(cat revert_tag.txt)"
+                }
+              },
+              {
+                "type": "divider"
+              }
+            ]
+          }
