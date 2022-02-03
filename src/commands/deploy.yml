@@ -1,0 +1,56 @@
+description: >
+      Deploy a new docker container
+      << version >> is optiona. If absent - will deploy the latest version
+      $AWS_ACCOUNT_ID must be set
+
+parameters:
+      env:
+            description: target environment (i.e, qa, staging, production)
+            type: string
+      project:
+            description: your git repository project name
+            type: string
+      version:
+            description: version of the docker image to deploy (optional, will deploy latest if missing)
+            type: string
+
+steps:
+      - run:
+            name: Install aws cli
+            command: sudo apt install awscli jq -y
+      - run:
+            name: Send deploy message to SQS
+            command: |
+              versiontodeploy="<< parameters.version >>"
+              if [ -z "$versiontodeploy" ]; then
+                versiontodeploy=$(aws s3 cp s3://hip-ops/state/<< parameters.project >>.latest -)
+              fi
+              aws sqs send-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy --message-body $versiontodeploy
+      - run:
+            name: Wait for deployment status
+            command: |
+              acks=0
+              for i in {1..12}; do
+                sleep 5
+                message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/staging-hip-rt-backend-deploy-status)
+                if [ "$message" == "ACK" ]; then
+                  receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
+                  aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/staging-hip-rt-backend-deploy-status --receipt-handle $receipt
+                  let acks++
+                fi
+              done
+              success=0
+              iteration=0
+              while [ $success != $acks && $iteration < 900 ]; do
+                sleep 1
+                message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/staging-hip-rt-backend-deploy-status)
+                if [ -z "$message" ]; then
+                  status=$(echo "$message" | jq -r '.Messages[] | .Body')
+                  receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
+                  aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/staging-hip-rt-backend-deploy-status --receipt-handle $receipt
+                  if [ $status = 'FAILED' ]; then exit 1; fi
+                  let success++;
+                fi
+                let iteration++
+              done
+              echo "Deployment Done"
