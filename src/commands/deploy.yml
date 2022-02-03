@@ -11,7 +11,7 @@ parameters:
             description: your git repository project name
             type: string
       version:
-            description: version of the docker image to deploy (optional, will deploy latest if missing)
+            description: version of the docker image to deploy (Circle ci build num or 'latest')
             type: string
 
 steps:
@@ -22,7 +22,7 @@ steps:
             name: Send deploy message to SQS
             command: |
               versiontodeploy="<< parameters.version >>"
-              if [ -z "$versiontodeploy" ]; then
+                if [ "$versiontodeploy" == "latest" ]; then
                 versiontodeploy=$(aws s3 cp s3://hip-ops/state/<< parameters.project >>.latest -)
               fi
               aws sqs send-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy --message-body $versiontodeploy
