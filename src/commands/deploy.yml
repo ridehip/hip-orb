@@ -1,5 +1,6 @@
 description: >
       Deploy a new docker container
+      << version >> is optiona. If absent - will deploy the latest version
       $AWS_ACCOUNT_ID must be set
 
 parameters:
