@@ -11,7 +11,7 @@ parameters:
             description: your git repository project name
             type: string
       version:
-            description: version of the docker image to deploy (Circle ci build num or 'latest')
+            description: version of the docker image to deploy (Circle CI build num or 'latest') 
             type: string
 
 steps:
