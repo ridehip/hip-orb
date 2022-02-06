@@ -32,10 +32,10 @@ steps:
               acks=0
               for i in {1..12}; do
                 sleep 5
-                message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/staging-hip-rt-backend-deploy-status)
+                message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
                 if [ "$message" == "ACK" ]; then
                   receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
-                  aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/staging-hip-rt-backend-deploy-status --receipt-handle $receipt
+                  aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
                   let acks++
                 fi
               done
@@ -43,13 +43,13 @@ steps:
               iteration=0
               while [ $success != $acks && $iteration < 900 ]; do
                 sleep 1
-                message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/staging-hip-rt-backend-deploy-status)
+                message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
                 if [ -z "$message" ]; then
                   status=$(echo "$message" | jq -r '.Messages[] | .Body')
                   receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
-                  aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/staging-hip-rt-backend-deploy-status --receipt-handle $receipt
+                  aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
                   if [ $status = 'FAILED' ]; then exit 1; fi
-                  let success++;
+                  if [ $status = 'SUCCESS' ]; then let success++; fi
                 fi
                 let iteration++
               done
