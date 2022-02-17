@@ -41,7 +41,7 @@ steps:
               done
               success=0
               iteration=0
-              while [ $success != $acks && $iteration < 900 ]; do
+              while [ $success -lt $acks ] && [ $iteration -lt 900 ]; do
                 sleep 1
                 message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
                 if [ -z "$message" ]; then
