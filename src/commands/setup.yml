@@ -8,9 +8,6 @@ parameters:
       project:
             description: your git repository project name
             type: string
-      bucket:
-            description: S3 bucket name
-            type: string
 
 steps:
       - run:
