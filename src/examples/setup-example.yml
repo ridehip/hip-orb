@@ -9,8 +9,6 @@ usage:
       docker:
         - image: circleci/python:3.6
       steps:
-        - hip-orb/deploy:
+        - hip-orb/setup:
             env: production
             project: backend
-            bucket: ops
-

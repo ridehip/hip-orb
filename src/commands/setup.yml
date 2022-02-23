@@ -8,9 +8,6 @@ parameters:
       project:
             description: your git repository project name
             type: string
-      bucket:
-            description: S3 bucket name
-            type: string
 
 steps:
       - run:
@@ -25,4 +22,4 @@ steps:
       - run:
             name: "Create ECR repository"
             command: |
-              aws ecr create-repository --repository-name << parameters.project >> --region us-east-2 --encryption-configuration '{"encryptionType":"KMS"}'
+              aws ecr describe-repositories --repository-names << parameters.project >> --region us-east-2 || aws ecr create-repository --repository-name << parameters.project >> --region us-east-2 --encryption-configuration '{"encryptionType":"KMS"}'
