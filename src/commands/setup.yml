@@ -1,0 +1,31 @@
+description: >
+      Create ECR repository for docker image out of the project and create SQS queues for deployments
+      $AWS_ACCOUNT_ID must be set
+
+parameters:
+      env:
+            description: target environment (i.e, qa, staging, production)
+            type: string
+      project:
+            description: your git repository project name
+            type: string
+      bucket:
+            description: S3 bucket name
+            type: string
+
+steps:
+      - run:
+            name: Install aws cli
+            command: sudo apt install awscli -y
+
+      - run:
+            name: "Create SQS queues"
+            command: |
+              aws s3 cp s3://<< parameters.bucket >>/sqs-attributes.json .
+              aws sqs create-queue --queue-name << parameters.env >>-<< parameters.project >>-deploy --attributes file://sqs-attributes.json --region us-east-2
+              aws sqs create-queue --queue-name << parameters.env >>-<< parameters.project >>-deploy-status --attributes file://sqs-attributes.json --region us-east-2
+
+      - run:
+            name: "Create ECR repository"
+            command: |
+              aws ecr create-repository --repository-name << parameters.project >> --region us-east-2 --encryption-configuration '{"encryptionType":"KMS"}'
