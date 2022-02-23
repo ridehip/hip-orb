@@ -20,9 +20,8 @@ steps:
       - run:
             name: "Create SQS queues"
             command: |
-              aws s3 cp s3://<< parameters.bucket >>/sqs-attributes.json .
-              aws sqs create-queue --queue-name << parameters.env >>-<< parameters.project >>-deploy --attributes file://sqs-attributes.json --region us-east-2
-              aws sqs create-queue --queue-name << parameters.env >>-<< parameters.project >>-deploy-status --attributes file://sqs-attributes.json --region us-east-2
+              aws sqs create-queue --queue-name << parameters.env >>-<< parameters.project >>-deploy --attributes '{"VisibilityTimeout":"0","MessageRetentionPeriod":"300","SqsManagedSseEnabled":"true"}' --region us-east-2
+              aws sqs create-queue --queue-name << parameters.env >>-<< parameters.project >>-deploy-status --attributes '{"VisibilityTimeout":"0","MessageRetentionPeriod":"300","SqsManagedSseEnabled":"true"}' --region us-east-2
       - run:
             name: "Create ECR repository"
             command: |
