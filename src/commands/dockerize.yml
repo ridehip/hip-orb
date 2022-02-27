@@ -1,6 +1,6 @@
 description: >
       Building a docker image out of the project and uploads it to AWS
-      $AWS_ACCOUNT_ID and CIRCLE_BUILD_NUM must be set
+      $AWS_ACCOUNT_ID, $AWS_ACCOUNT_NAME and CIRCLE_BUILD_NUM must be set
 
 parameters:
       project:
@@ -29,6 +29,11 @@ steps:
                   docker build -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:${CIRCLE_BUILD_NUM} -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:latest --build-arg GITHUB_PACKAGES_AUTH_TOKEN=$GITHUB_PACKAGES_AUTH_TOKEN .
                   docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:${CIRCLE_BUILD_NUM}
                   docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/<< parameters.project >>:latest
+
+      - run:
+            name: 'Write version number to S3 state file'
+            command: |
+                  echo $CIRCLE_BUILD_NUM | aws s3 cp - s3://$AWS_ACCOUNT_NAME-ops/state/<< parameters.project >>.latest
 
       - run:
           name: "Set a git tag for the image creation"

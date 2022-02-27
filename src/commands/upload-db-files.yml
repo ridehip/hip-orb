@@ -1,0 +1,19 @@
+description: >
+      Upload database files to S3
+      $AWS_ACCOUNT_NAME must be set
+
+parameters:
+      project:
+            description: your git repository project name
+            type: string
+
+steps:
+      - run:
+            name: Install aws cli
+            command: sudo apt install awscli jq -y
+
+      - run:
+            name: "Package & Upload db files to S3"
+            command: |
+                tar cf << parameters.project >>_db.tar db/changelog.xml db/*.mysql.sql
+                aws s3 cp << parameters.project >>_db.tar s3://$AWS_ACCOUNT_NAME-liquibase-db-files/<< parameters.project >>_db.tar
