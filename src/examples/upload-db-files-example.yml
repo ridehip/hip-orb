@@ -1,0 +1,13 @@
+description: >
+      Upload database files to S3
+usage:
+  version: 2.1
+  orbs:
+    hip-orb: ridhip/hip-orb@1
+  jobs:
+    build:
+      docker:
+        - image: circleci/python:3.6
+      steps:
+        - hip-orb/upload-db-files:
+            project: backend
