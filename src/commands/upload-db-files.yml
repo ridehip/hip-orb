@@ -1,6 +1,6 @@
 description: >
       Upload database files to S3
-      $AWS_ACCOUNT_NAME must be set
+      $AWS_ACCOUNT_NAME must be set and awscli must be installed (use this command with dockerize)
 
 parameters:
       project:
@@ -8,10 +8,6 @@ parameters:
             type: string
 
 steps:
-      - run:
-            name: Install aws cli
-            command: sudo apt install awscli jq -y
-
       - run:
             name: "Package & Upload db files to S3"
             command: |

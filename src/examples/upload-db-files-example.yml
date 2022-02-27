@@ -1,5 +1,5 @@
 description: >
-      Upload database files to S3
+      Dockerize and upload database files to S3
 usage:
   version: 2.1
   orbs:
@@ -9,5 +9,7 @@ usage:
       docker:
         - image: circleci/python:3.6
       steps:
+        - hip-orb/dockerize:
+            project: backend
         - hip-orb/upload-db-files:
             project: backend
