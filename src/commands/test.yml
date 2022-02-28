@@ -1,0 +1,25 @@
+description: Run all tests and validations
+
+steps:
+      - checkout
+      - run: cp .circleci/.circleci.env .env.test
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: 
+          name: Install npm packages
+          command: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - run:
+          name: Run tests and collect coverage report
+          command: npm run validate
