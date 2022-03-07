@@ -33,11 +33,13 @@ steps:
               for i in {1..12}; do
                 sleep 5
                 message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
-                status=$(echo "$message" | jq -r '.Messages[] | .Body')
-                if [ "$status" == "ACK" ]; then
-                  receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
-                  aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
-                  let acks++
+                if [ -n "$message" ]; then
+                  status=$(echo "$message" | jq -r '.Messages[] | .Body')
+                  if [ "$status" == "ACK" ]; then
+                    receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
+                    aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
+                    let acks++
+                  fi
                 fi
               done
               success=0
