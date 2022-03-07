@@ -5,7 +5,7 @@ description: >
 
 parameters:
       env:
-            description: target environment (i.e, qa, staging, production, ...)
+            description: target environment (i.e, qa, staging, production)
             type: string
       project:
             description: your git repository project name
@@ -49,11 +49,11 @@ steps:
                 message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
                 if [ -n "$message" ]; then
                   status=$(echo "$message" | jq -r '.Messages[] | .Body')
-                  if [ $status = 'FAILED' ] || [ $status = 'SUCCESS' ]; then
+                  if [ "$status" == "FAILED" ] || [ "$status" == "SUCCESS" ]; then
                     receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
                     aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
-                    if [ $status = 'FAILED' ]; then exit 1; fi
-                    if [ $status = 'SUCCESS' ]; then let success++; fi
+                    if [ "$status" == "FAILED" ]; then exit 1; fi
+                    if [ "$status" == "SUCCESS" ]; then let success++; fi
                   fi
                 fi
                 let iteration++
