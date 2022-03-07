@@ -5,7 +5,7 @@ description: >
 
 parameters:
       env:
-            description: target environment (i.e, qa, staging, production)
+            description: target environment (i.e, qa, staging, production ...)
             type: string
       project:
             description: your git repository project name
