@@ -59,9 +59,9 @@ steps:
                   if [ "$status" == "FAILED" ] || [ "$status" == "SUCCESS" ]; then
                     receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
                     aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
-                    if [ "$status" == "FAILED" ]; then 
+                    if [ "$status" == "FAILED" ]; then
                       echo "Deploy failed, exiting with status 1"
-                      exit 1; 
+                      exit 1;
                     fi
                     if [ "$status" == "SUCCESS" ]; then let SUCCESS++; fi
                   fi
