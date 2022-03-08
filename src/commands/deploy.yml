@@ -29,33 +29,43 @@ steps:
       - run:
             name: Wait for deployment status
             command: |
-              acks=0
+              ACKS=0
               for i in {1..12}; do
                 sleep 5
                 message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
                 if [ -n "$message" ]; then
+                  echo "Got message in queue"
                   status=$(echo "$message" | jq -r '.Messages[] | .Body')
+                  echo "message: $status"
                   if [ "$status" == "ACK" ]; then
+                    echo "Got ACK message"
                     receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
+                    echo "Deleting ACK message from queue"
                     aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
-                    let acks++
+                    echo "ACK message deleted"
+                    let ACKS++
                   fi
                 fi
               done
-              success=0
-              iteration=0
-              while [ $success -lt $acks ] && [ $iteration -lt 900 ]; do
+              echo "Got $ACKS acks"
+              SUCCESS=0
+              ITERATION=0
+              while [ $SUCCESS -lt $ACKS ] && [ $ITERATION -lt 900 ]; do
                 sleep 1
                 message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
                 if [ -n "$message" ]; then
                   status=$(echo "$message" | jq -r '.Messages[] | .Body')
+                  echo "Got deploy message: $status"
                   if [ "$status" == "FAILED" ] || [ "$status" == "SUCCESS" ]; then
                     receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
                     aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
-                    if [ "$status" == "FAILED" ]; then exit 1; fi
-                    if [ "$status" == "SUCCESS" ]; then let success++; fi
+                    if [ "$status" == "FAILED" ]; then
+                      echo "Deploy failed, exiting with status 1"
+                      exit 1;
+                    fi
+                    if [ "$status" == "SUCCESS" ]; then let SUCCESS++; fi
                   fi
                 fi
-                let iteration++
+                let ITERATION++
               done
               echo "Deployment Done"
