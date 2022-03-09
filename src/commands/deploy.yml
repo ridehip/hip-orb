@@ -39,8 +39,7 @@ steps:
                     echo "Got ACK message (currently $ACKS acks)"
                     receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
                     aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
-                    echo "ACK message deleted"
-                    ((ACKS++))
+                    ACKS=$((ACKS+1))
                     echo "Got $ACKS acks so far..."
                   fi
                 fi
@@ -61,10 +60,10 @@ steps:
                       exit 1;
                     fi
                     if [ "$status" == "SUCCESS" ]; then
-                      ((SUCCESS++))
+                      SUCCESS=$((SUCCESS+1))
                     fi
                   fi
                 fi
-                ((ITERATION++))
+                ITERATION=$((ITERATION+1))
               done
               echo "Deployment Done"
