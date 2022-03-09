@@ -34,16 +34,11 @@ steps:
                 sleep 5
                 message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
                 if [ -n "$message" ]; then
-                  echo "Got message in queue"
                   status=$(echo "$message" | jq -r '.Messages[] | .Body')
-                  echo "message: $status"
                   if [ "$status" == "ACK" ]; then
-                    echo "Got ACK message"
                     receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
-                    echo "Deleting ACK message from queue"
                     aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
-                    echo "ACK message deleted"
-                    let ACKS++
+                    ((ACKS++))
                   fi
                 fi
               done
@@ -55,7 +50,6 @@ steps:
                 message=$(aws sqs receive-message --region us-east-2 --max-number-of-messages 1 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status)
                 if [ -n "$message" ]; then
                   status=$(echo "$message" | jq -r '.Messages[] | .Body')
-                  echo "Got deploy message: $status"
                   if [ "$status" == "FAILED" ] || [ "$status" == "SUCCESS" ]; then
                     receipt=$(echo "$message" | jq -r '.Messages[] | .ReceiptHandle')
                     aws sqs delete-message --region us-east-2 --queue-url https://sqs.us-east-2.amazonaws.com/$AWS_ACCOUNT_ID/<< parameters.env >>-<< parameters.project >>-deploy-status --receipt-handle $receipt
@@ -63,7 +57,9 @@ steps:
                       echo "Deploy failed, exiting with status 1"
                       exit 1;
                     fi
-                    if [ "$status" == "SUCCESS" ]; then let SUCCESS++; fi
+                    if [ "$status" == "SUCCESS" ]; then
+                      ((SUCCESS++))
+                    fi
                   fi
                 fi
                 let ITERATION++
