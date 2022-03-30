@@ -17,7 +17,9 @@ steps:
 
       - run:
             name: Install aws cli
-            command: sudo apt install awscli -y
+            command: |
+                  sudo apt-get update
+                  sudo apt install awscli -y
 
       - run:
             name: "Log in to AWS ECR && docker login"
