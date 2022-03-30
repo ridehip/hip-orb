@@ -17,7 +17,9 @@ parameters:
 steps:
       - run:
             name: Install aws cli
-            command: sudo apt install awscli jq -y
+            command: |
+                  sudo apt-get update
+                  sudo apt install awscli jq -y
       - run:
             name: Send deploy message to SQS
             command: |
