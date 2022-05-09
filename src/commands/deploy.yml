@@ -13,6 +13,10 @@ parameters:
       version:
             description: version of the docker image to deploy (Circle CI build num or 'latest')
             type: string
+      timeout:
+            description: the timeout of the deploy (default 10m)
+            default: "10m"
+            type: string
 
 steps:
       - run:
@@ -67,3 +71,4 @@ steps:
                 ITERATION=$((ITERATION+1))
               done
               echo "Deployment Done"
+            no_output_timeout: << parameters.timeout >>
