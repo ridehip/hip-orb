@@ -16,3 +16,8 @@
 * example: `[semver:minor] Added support for windows`
 * Squash and merge. Ensure the semver tag is preserved and entered as a part of the commit message.
 * On merge, after manual approval, the orb will automatically be published to the Orb Registry.
+
+## to publish manually (in case the above doesn't work...):
+* circleci orb pack . | circleci orb validate -
+* circleci orb pack . | circleci orb publish - ridehip/hip-orb@dev:alpha
+* circleci orb publish promote ridehip/hip-orb@dev:alpha minor
