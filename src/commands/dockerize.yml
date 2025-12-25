@@ -36,11 +36,3 @@ steps:
             name: 'Write version number to S3 state file'
             command: |
                   echo $CIRCLE_BUILD_NUM | aws s3 cp - s3://$AWS_ACCOUNT_NAME-ops/state/<< parameters.project >>.latest
-
-      - run:
-          name: "Set a git tag for the image creation"
-          command: |
-            git config --global user.email "<< parameters.email >>"
-            git config --global user.name "Circleci Build"
-            git tag -a << parameters.project >>_version_${CIRCLE_BUILD_NUM} -m "docker created with build number ${CIRCLE_BUILD_NUM}"
-            git push origin << parameters.project >>_version_${CIRCLE_BUILD_NUM}

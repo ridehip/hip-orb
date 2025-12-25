@@ -2,9 +2,9 @@ description: |
   Environment to run tests, including a test mysql instance
 
 docker:
-      - image: cimg/node:20.12.2
-      - image: cimg/mysql:8.0.33
-        command: mysqld --disable-log-bin
+      - image: cimg/node:24.12.0
+      - image: cimg/mysql:8.4.7
+        command: mysqld --disable-log-bin --sync-binlog=0 --performance-schema=OFF
         environment:
           MYSQL_ROOT_PASSWORD: 'test'
           MYSQL_HOST: 127.0.0.1
